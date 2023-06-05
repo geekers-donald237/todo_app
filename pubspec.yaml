@@ -51,8 +51,9 @@ dependencies:
   uuid: ^3.0.7
   flutter_launcher_icons: ^0.13.1
   permission_handler: ^10.2.0
-  flutter_riverpod: ^2.3.6
   gap: ^3.0.0
+  flutter_riverpod: ^2.3.6
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
