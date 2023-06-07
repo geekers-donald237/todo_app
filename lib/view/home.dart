@@ -1,16 +1,51 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
+import 'package:todoapp/view/category.dart';
 
+import '../provider/auth_provider.dart';
+import '../provider/services_provider.dart';
 import '../widget/cardTodo.dart';
-import '../widget/show_model.dart';
+import '../common/show_model.dart';
+import 'authDetails/profil.dart';
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends ConsumerWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
+  String getEmailPrefix(String email) {
+    int atIndex = email.indexOf('@');
+    if (atIndex != -1) {
+      return email.substring(0, atIndex);
+    }
+    return email;
+  }
+
   @override
-  Widget build(BuildContext context) {
-   
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(fireBaseAuthProvider);
+    User? user = data.currentUser;
+    String providerId = user?.providerData[0].providerId ?? '';
+    print(providerId);
+    String nom;
+
+    if (providerId == 'google.com') {
+      nom = user!.displayName.toString();
+    } else {
+      nom = getEmailPrefix(user!.email.toString());
+    }
+
+    String getCurrentDate() {
+      final now = DateTime.now();
+      final formatter = DateFormat('dd/MM/yy');
+      return formatter.format(now);
+    }
+
+    String date = getCurrentDate();
+
+    final todoData = ref.watch(fetchStreamProvider); // erreur ici
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       appBar: AppBar(
@@ -18,11 +53,6 @@ class MyHomePage extends StatelessWidget {
         foregroundColor: Colors.black,
         elevation: 0,
         title: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.amber.shade200,
-            radius: 35,
-            child: Image.asset('assets/avatar.png'),
-          ),
           title: Text(
             "Hello I'm ",
             style: TextStyle(
@@ -31,19 +61,34 @@ class MyHomePage extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            "Idris dd",
+            nom,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ),
         centerTitle: true,
         actions: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            padding: EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                    onPressed: () {}, icon: Icon(CupertinoIcons.calendar)),
-                IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.bell)),
+                Text(
+                  " ",
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  date,
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -54,26 +99,9 @@ class MyHomePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
             children: [
-              const Gap(20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        "Today's Taks",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black),
-                      ),
-                      Text(
-                        "Sunday , 4 june",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
                   ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD5E8FA),
@@ -83,27 +111,82 @@ class MyHomePage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: () => showModalBottomSheet(
-                          isScrollControlled: false,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          context: context,
-                          builder: (context) => AddNewTaskModel()),
+                      onPressed: () {},
                       child: Text(
-                        "+ New Task",
+                        "+ New Categorie?",
                         style: TextStyle(color: Colors.black),
                       )),
                 ],
               ),
-              Gap(20),
+              Gap(10),
               ListView.builder(
-                  itemCount: 1,
+                  itemCount: todoData.value?.length ?? 0,
                   shrinkWrap: true,
-                  itemBuilder: (context, index) => cardTodoListWidget())
+                  itemBuilder: (context, index) => cardTodoListWidget(
+                        getIndex: index,
+                      ))
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFFD5E8FA),
+        foregroundColor: Colors.blue.shade800,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        onPressed: () {
+          showModalBottomSheet(
+              isScrollControlled: false,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              context: context,
+              builder: (context) => AddNewTaskModel());
+        },
+        tooltip: 'Add Todo',
+        child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: IconButton(
+              icon: Icon(Icons.home),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => MyHomePage(),
+                ));
+              },
+            ),
+            label: 'Accueil',
+          ),
+          BottomNavigationBarItem(
+            icon: IconButton(
+              icon: Icon(Icons.category_outlined),
+              onPressed: () {
+                // Navigator.of(context).push(MaterialPageRoute(
+                //   builder: (context) => CategorieList(),
+                // ));
+              },
+            ),
+            label: 'category',
+          ),
+          BottomNavigationBarItem(
+            icon: IconButton(
+              icon: Icon(Icons.person),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => Profile(),
+                ));
+              },
+            ),
+            label: 'Profil',
+          ),
+        ],
+        currentIndex: 0,
+        selectedItemColor: Colors.blue.shade400,
+        onTap: (index) {},
       ),
     );
   }
