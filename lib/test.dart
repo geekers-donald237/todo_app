@@ -1,110 +1,142 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
 
-import '../widget/cardTodo.dart';
-import '../widget/show_model.dart';
+class AddCat extends StatefulWidget {
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  @override
+  State<AddCat> createState() => _AddCatState();
+}
+
+class _AddCatState extends State<AddCat> {
+
+  List<String> notes = [];
+  String name;
+
+  @override
+  void initState() {
+    super.initState();
+    getNotes();
+  }
+
+  void getNotes() async {
+    notes.clear();
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('categorie')
+          .doc("c")
+          .get();
+     final n= querySnapshot.data()['cat'];
+     for (var i = 0; i < n.length; i++) {
+       notes.add(n[i]);
+     }
+     notes.sort();
+     setState(
+          () {});// rafraîchir l'affichage pour afficher les nouvelles notes
+    } catch (e) {
+      notes.add("vide");
+    }
+  }
+
+  void del(int i){
+    notes.removeAt(i);
+    FirebaseFirestore.instance
+                  .collection('categorie')
+                  .doc('c')
+                  .set({'cat':notes});
+  }
+
+  void add(String val){
+    if (!rech(val)) {
+    notes.add(val);
+    FirebaseFirestore.instance
+                  .collection('categorie')
+                  .doc('c')
+                  .set({'cat':notes});
+    }
+  }
+
+  bool rech(String val){
+    for (var i = 0; i < notes.length; i++) {
+      if(notes[i]==val){
+        return true;
+      }
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
-   
     return Scaffold(
-      backgroundColor: Colors.grey.shade200,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        title: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.amber.shade200,
-            radius: 35,
-            child: Image.asset('assets/avatar.png'),
-          ),
-          title: Text(
-            "Hello I'm ",
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade400,
-            ),
-          ),
-          subtitle: Text(
-            "Idris dd",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                IconButton(
-                    onPressed: () {}, icon: Icon(CupertinoIcons.calendar)),
-                IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.bell)),
-              ],
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            children: [
-              const Gap(20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        "Today's Taks",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black),
-                      ),
-                      Text(
-                        "Sunday , 4 june",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD5E8FA),
-                        foregroundColor: Colors.blue.shade800,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: () => showModalBottomSheet(
-                          isScrollControlled: false,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          context: context,
-                          builder: (context) => AddNewTaskModel()),
-                      child: Text(
-                        "+ New Task",
-                        style: TextStyle(color: Colors.black),
-                      )),
-                ],
+      body: ListView.builder(
+        itemBuilder: (context, index) {
+          return Card(
+            child: ListTile(
+                title: Text(notes[index], style: TextStyle(fontSize: 20)),
+                leading: CircleAvatar(
+                  child: Text(
+                      notes[index][0],
+                      style: TextStyle(fontSize: 20)),
+                ),trailing: 
+                      IconButton(
+                        icon: Icon(Icons.delete_outline),
+                        onPressed: (){del(index);getNotes();}, 
+          ),),);
+        },
+        itemCount: notes.length,
+      ),floatingActionButton: FloatingActionButton(
+      child: Icon(Icons.add), //child widget inside this button
+      onPressed: (){
+        return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('New categorie'),
+          content: TextFormField(
+                                onChanged: (value) =>
+                                    setState(() => name = value),
+                                decoration: InputDecoration(
+                                  hintText: 'Ex: Cours',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(0.0),
+                                    borderSide: BorderSide(color: Colors.grey),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(0.0),
+                                    borderSide: BorderSide(color: Colors.grey),
+                                  ),
+                                ),
+                                maxLength: 100,
+                              ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
               ),
-              Gap(20),
-              ListView.builder(
-                  itemCount: 1,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) => cardTodoListWidget())
-            ],
-          ),
-        ),
-      ),
+              child: const Text('Disable'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Enable'),
+              onPressed: () {
+                if (!name.isEmpty) {
+                add(name);
+                getNotes();
+                }
+                name="";
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+    },
+  ),
     );
   }
 }

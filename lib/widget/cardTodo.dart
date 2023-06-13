@@ -1,8 +1,7 @@
-// ignore_for_file: camel_case_types
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:todoapp/provider/services_provider.dart';
@@ -15,35 +14,34 @@ class cardTodoListWidget extends ConsumerWidget {
   });
 
   final int getIndex;
-
-  int calculateHourDifference(String dateString) {
-    final DateFormat format = DateFormat('dd/MM/yy');
+  int calculateDayDifference(String dateString) {
+    final DateFormat format = DateFormat('MM/dd/yyyy');
 
     // Conversion de la chaîne de caractères en objet DateTime
     final DateTime date = format.parse(dateString);
 
-    // Récupération de la date et de l'heure actuelles
+    // Récupération de la date actuelle
     final DateTime now = DateTime.now();
 
-    // Calcul de la différence en heures
-    final int differenceInHours = now.difference(date).inDays;
+    // Calcul de la différence en jours
+    final int differenceInDays = now.difference(date).inDays;
 
-    return differenceInHours;
+    return -1 * differenceInDays;
   }
 
-  Color getColorByHourDifference(int hourDifference) {
-    if (hourDifference <= 2) {
-      // Moins de 24 heures de différence
-      return Colors.red;
-    } else if (hourDifference <= 15) {
-      // Entre 24 et 48 heures de différence
-      return Colors.orange;
-    } else if (hourDifference <= 40) {
-      // Entre 48 et 72 heures de différence
-      return Colors.yellow;
+  Color getColorByDayDifference(int dayDifference) {
+    if (dayDifference >= 0 && dayDifference <= 2) {
+      // Moins de 2 jours de différence
+      return const Color.fromARGB(255, 235, 21, 6); // Rouge
+    } else if (dayDifference <= 15) {
+      // Entre 2 et 15 jours de différence
+      return Color.fromARGB(207, 252, 80, 80); // Rouge orangé
+    } else if (dayDifference <= 40) {
+      // Entre 15 et 40 jours de différence
+      return Colors.yellow; // Jaune
     } else {
-      // Plus de 72 heures de différence
-      return Colors.green;
+      // Plus de 40 jours de différence
+      return Colors.green; // Vert
     }
   }
 
@@ -73,7 +71,7 @@ class cardTodoListWidget extends ConsumerWidget {
         }
 
         date = todoData[getIndex].dateTask.toString();
-        int difference = calculateHourDifference(date);
+        int difference = calculateDayDifference(date);
         print('Différence en heures : $difference');
 
         return Container(
@@ -104,6 +102,7 @@ class cardTodoListWidget extends ConsumerWidget {
                     children: [
                       ListTile(
                         onTap: () {
+                          print(todoData[getIndex].participants);
                           Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => UpdateTask(
                               todoModel: todoData[getIndex],
@@ -111,6 +110,20 @@ class cardTodoListWidget extends ConsumerWidget {
                           ));
                         },
                         contentPadding: EdgeInsets.zero,
+                        leading: IconButton(
+                            icon: Icon(CupertinoIcons.delete),
+                            onPressed: () {
+                              ref
+                                  .read(serviceProvider)
+                                  .deleteTask(todoData[getIndex].docID);
+                              Fluttertoast.showToast(
+                                  msg: "Task delete Succefully",
+                                  backgroundColor: Colors.orange.shade300,
+                                  textColor: Colors.white,
+                                  toastLength: Toast.LENGTH_LONG,
+                                  timeInSecForIosWeb: 3,
+                                  fontSize: 16.0);
+                            }),
                         title: Padding(
                           padding: EdgeInsets.symmetric(
                               vertical: 4), // Ajouter un espace vertical
@@ -184,8 +197,8 @@ class cardTodoListWidget extends ConsumerWidget {
                                         backgroundColor: Colors.grey.shade300,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                getColorByHourDifference(
-                                                    -1 * (difference))),
+                                                getColorByDayDifference(
+                                                    (difference))),
                                       ),
                                     ),
                                   ),
