@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todoapp/provider/services_provider.dart';
 import 'package:todoapp/view/category.dart';
 import 'package:todoapp/view/home.dart';
@@ -137,11 +136,28 @@ class Profile extends ConsumerWidget {
                         itemCount: todoData.value?.length ?? 0,
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
-                          final todo = todoData.value![index];
-                          if (!todo.isDone) {
-                            return SizedBox(); // Retourne un widget vide si todoData.isDone est faux
+                          // Récupérer la tâche (todo) à l'index donné
+                          final todo = todoData.value?[index];
+
+                          // Vérifier si l'utilisateur actuel est un participant de la tâche
+                          final currentUserEmail = user
+                              .email; // Remplacez par l'e-mail de l'utilisateur actuel
+                          final isCurrentUserParticipant =
+                              todo?.participants.contains(currentUserEmail) ??
+                                  false;
+
+                          // Vérifier si la tâche est marquée comme terminée
+                          final isDone = todo?.isDone ?? false;
+
+                          // Afficher uniquement les todos de l'utilisateur actuel où isDone est à true
+                          if (isCurrentUserParticipant && isDone) {
+                            return cardTodoListWidget(
+                              getIndex: index,
+                            );
+                          } else {
+                            // Retourner un widget vide si l'utilisateur actuel n'est pas un participant de la tâche ou si isDone est à false
+                            return SizedBox.shrink();
                           }
-                          return cardTodoListWidget(getIndex: index);
                         },
                       )
                     ],
@@ -170,7 +186,7 @@ class Profile extends ConsumerWidget {
               icon: Icon(Icons.category),
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => CategorieList(),
+                  builder: (context) => CategoriesPage(),
                 ));
               },
             ),

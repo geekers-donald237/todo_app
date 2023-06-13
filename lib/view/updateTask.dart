@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gap/gap.dart';
 import 'package:todoapp/model/todo_model.dart';
+import 'package:todoapp/provider/auth_provider.dart';
 import 'package:todoapp/view/home.dart';
 
 import '../constants/app_style.dart';
@@ -16,36 +18,72 @@ class UpdateTask extends ConsumerWidget {
   const UpdateTask({super.key, required this.todoModel});
   final TodoModel todoModel;
 
-  showDeleteConfirmationDialog(BuildContext context, WidgetRef ref) {
+  void openParticipantEmailDialog(BuildContext context, WidgetRef ref) {
+    TextEditingController emailController = TextEditingController();
+    final data = ref.watch(fireBaseAuthProvider);
+    final auth = ref.watch(authenticationProvider);
+    User? user = data.currentUser;
+    String currentUserEmail = user!.email.toString();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Suppression"),
-          content: Text("Voulez-vous supprimer cette tache ?"),
+          title: Text('Gestion des participants'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'E-mail du participant',
+                ),
+              ),
+              SizedBox(height: 16),
+              Text('Participants:'),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: todoModel.participants.length,
+                itemBuilder: (context, index) {
+                  final participant = todoModel.participants[index];
+
+                  // Vérifier si le participant est différent du currentUser
+                  if (participant != currentUserEmail) {
+                    return ListTile(
+                      title: Text(participant),
+                    );
+                  } else {
+                    // Retourner un widget vide si le participant est le currentUser
+                    return SizedBox.shrink();
+                  }
+                },
+              ),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
-              child: Text("Annuler"),
+              child: Text('Annuler'),
               onPressed: () {
-                Navigator.of(context).pop(); // Ferme la boîte de dialogue
+                Navigator.of(context).pop();
               },
             ),
-            ElevatedButton(
-              child: Text("Supprimer"),
+            TextButton(
+              child: Text('Ajouter'),
               onPressed: () {
-                ref.read(serviceProvider).deleteTask(todoModel.docID);
+                String participantEmail = emailController.text;
+                print('E-mail du participant : $participantEmail');
+                ref
+                    .read(serviceProvider)
+                    .addParticipant(todoModel.docID, participantEmail);
                 Fluttertoast.showToast(
-                    msg: "Task delete Succefully",
-                    backgroundColor: Colors.orange.shade300,
-                    textColor: Colors.white,
-                    toastLength: Toast.LENGTH_LONG,
-                    timeInSecForIosWeb: 3,
-                    fontSize: 16.0);
-                Navigator.of(context)
-                    .pop(); // Ferme la boîte de dialogue après la suppression
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => MyHomePage(),
-                ));
+                  msg: "Participant ajouté avec succès",
+                  backgroundColor: Colors.green.shade300,
+                  textColor: Colors.white,
+                  toastLength: Toast.LENGTH_LONG,
+                  timeInSecForIosWeb: 3,
+                  fontSize: 16.0,
+                );
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -57,8 +95,8 @@ class UpdateTask extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todoData = ref.watch(fetchStreamProvider);
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
+    final titleController = TextEditingController(text:todoModel.titleTask.toString());
+    final descriptionController = TextEditingController(text: todoModel.descriptionTask.toString());
 
     return Scaffold(
       appBar: AppBar(
@@ -74,9 +112,9 @@ class UpdateTask extends ConsumerWidget {
               children: [
                 IconButton(
                   onPressed: () {
-                    showDeleteConfirmationDialog(context, ref);
+                    openParticipantEmailDialog(context, ref);
                   },
-                  icon: Icon(CupertinoIcons.trash),
+                  icon: Icon(Icons.person_add_alt_1_outlined),
                 ),
               ],
             ),
@@ -91,7 +129,7 @@ class UpdateTask extends ConsumerWidget {
                 thickness: 1.2,
                 color: Colors.grey.shade200,
               ),
-              const SizedBox(height: 10),
+              // const SizedBox(height: 0),
               const Text(
                 'title',
                 style: AppStyle.headingOne,
@@ -209,23 +247,23 @@ class UpdateTask extends ConsumerWidget {
                               break;
                           }
 
-                          // ref.read(serviceProvider).updateAllTask(
-                          //     todoModel.docID,
-                          //     'modif title',
-                          //     'modif description',
-                          //     category);
+                          ref.read(serviceProvider).updateAllTask(
+                              todoModel.docID,
+                              titleController.text,
+                              descriptionController.text,
+                              category);
 
-                          // Fluttertoast.showToast(
-                          //     msg: "Task update Succefully",
-                          //     backgroundColor: Colors.green.shade300,
-                          //     textColor: Colors.white,
-                          //     toastLength: Toast.LENGTH_LONG,
-                          //     timeInSecForIosWeb: 3,
-                          //     fontSize: 16.0);
+                          Fluttertoast.showToast(
+                              msg: "Task update Succefully",
+                              backgroundColor: Colors.green.shade300,
+                              textColor: Colors.white,
+                              toastLength: Toast.LENGTH_LONG,
+                              timeInSecForIosWeb: 3,
+                              fontSize: 16.0);
 
-                          // titleController.clear();
-                          // descriptionController.clear();
-                          // ref.read(radioProvider.notifier).update((state) => 1);
+                          titleController.clear();
+                          descriptionController.clear();
+                          ref.read(radioProvider.notifier).update((state) => 1);
 
                           print('kjhgfdfgvhbjnjkbhgvfdtsrdxfc');
                           print(titleController.text);

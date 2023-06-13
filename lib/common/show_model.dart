@@ -1,26 +1,35 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:todoapp/constants/app_style.dart';
-import 'package:todoapp/model/todo_model.dart';
 import 'package:todoapp/provider/date_time_provider.dart';
 import 'package:todoapp/provider/radio_provider.dart';
-import 'package:todoapp/provider/services_provider.dart';
 import 'package:todoapp/widget/dateTime.dart';
 import 'package:todoapp/widget/radio.dart';
 import 'package:todoapp/widget/textfield.dart';
 
-class AddNewTaskModel extends ConsumerWidget {
-  AddNewTaskModel({Key? key}) : super(key: key);
+import '../model/todo_model.dart';
+import '../provider/auth_provider.dart';
+import '../provider/services_provider.dart';
 
-  final titleController = TextEditingController();
-  final descriptionController = TextEditingController();
+class AddNewTaskModel extends ConsumerWidget {
+  AddNewTaskModel({
+    super.key,
+  });
+
+  TextEditingController titleController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dateProv = ref.watch(dateProvider);
+    final data = ref.watch(fireBaseAuthProvider);
+    final auth = ref.watch(authenticationProvider);
+    User? user = data.currentUser;
+    String currentUserEmail = user!.email.toString();
     return Container(
       padding: const EdgeInsets.all(30),
       height: MediaQuery.of(context).size.height * 0.70,
@@ -200,20 +209,23 @@ class AddNewTaskModel extends ConsumerWidget {
                             break;
                         }
 
-                        // ref.read(serviceProvider).addNewTask(TodoModel(
-                        //       titleTask: titleController.text,
-                        //       descriptionTask:
-                        //           descriptionController.text,
-                        //       category: category,
-                        //       dateTask: ref.read(dateProvider),
-                        //       timeTask: ref.read(timeProvider),
-                        //       isDone: false,
-                        //     ));
 
-                        // titleController.clear();
-                        // descriptionController.clear();
-                        // ref.read(radioProvider.notifier).update((state) => 0);
-                        print(titleController.text + " lkjhjkjhjjj " + descriptionController.text );
+                        ref.read(serviceProvider).addNewTask(TodoModel(
+                              titleTask: 'General manner',
+                              descriptionTask: 'one another task',
+                              category: category,
+                              dateTask: ref.read(dateProvider),
+                              timeTask: ref.read(timeProvider),
+                              isDone: false,
+                              participants: [currentUserEmail],
+                            ));
+
+                        titleController.clear();
+                        descriptionController.clear();
+                        ref.read(radioProvider.notifier).update((state) => 0);
+                        print(titleController.text +
+                            " lkjhjkjhjjj " +
+                            descriptionController.text);
                         Navigator.pop(context);
                       },
                       child: const Text('Create'),

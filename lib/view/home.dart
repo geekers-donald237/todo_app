@@ -119,12 +119,36 @@ class MyHomePage extends ConsumerWidget {
                 ],
               ),
               Gap(10),
+              // ListView.builder(
+              //     itemCount: todoData.value?.length ?? 0,
+              //     shrinkWrap: true,
+              //     itemBuilder: (context, index) => cardTodoListWidget(
+              //           getIndex: index,
+              //         ))
               ListView.builder(
-                  itemCount: todoData.value?.length ?? 0,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) => cardTodoListWidget(
-                        getIndex: index,
-                      ))
+                itemCount: todoData.value?.length ?? 0,
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  // Récupérer la tâche (todo) à l'index donné
+                  final todo = todoData.value?[index];
+
+                  // Vérifier si l'utilisateur actuel est un participant de la tâche
+                  final currentUserEmail = user
+                      .email; // Remplacez par l'e-mail de l'utilisateur actuel
+                  final isCurrentUserParticipant =
+                      todo?.participants.contains(currentUserEmail) ?? false;
+
+                  // Afficher uniquement les todos de l'utilisateur actuel
+                  if (isCurrentUserParticipant) {
+                    return cardTodoListWidget(
+                      getIndex: index,
+                    );
+                  } else {
+                    // Retourner un widget vide si l'utilisateur actuel n'est pas un participant de la tâche
+                    return SizedBox.shrink();
+                  }
+                },
+              )
             ],
           ),
         ),
@@ -165,9 +189,9 @@ class MyHomePage extends ConsumerWidget {
             icon: IconButton(
               icon: Icon(Icons.category_outlined),
               onPressed: () {
-                // Navigator.of(context).push(MaterialPageRoute(
-                //   builder: (context) => CategorieList(),
-                // ));
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => CategoriesPage(),
+                ));
               },
             ),
             label: 'category',

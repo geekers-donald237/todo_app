@@ -30,4 +30,12 @@ class TodoService {
       'category': newCategorie
     });
   }
+
+  void addParticipant(String? docID, String participantEmail) {
+    todoCollection.doc(docID).update({
+      'participants': FieldValue.arrayUnion([participantEmail]),
+    });
+  }
+
+
 }
