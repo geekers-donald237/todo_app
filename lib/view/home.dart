@@ -113,18 +113,12 @@ class MyHomePage extends ConsumerWidget {
                       ),
                       onPressed: () {},
                       child: Text(
-                        "+ New Categorie?",
+                        "+ New Project?",
                         style: TextStyle(color: Colors.black),
                       )),
                 ],
               ),
               Gap(10),
-              // ListView.builder(
-              //     itemCount: todoData.value?.length ?? 0,
-              //     shrinkWrap: true,
-              //     itemBuilder: (context, index) => cardTodoListWidget(
-              //           getIndex: index,
-              //         ))
               ListView.builder(
                 itemCount: todoData.value?.length ?? 0,
                 shrinkWrap: true,

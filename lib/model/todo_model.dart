@@ -6,6 +6,7 @@ class TodoModel {
   final String descriptionTask;
   final String category;
   final String dateTask;
+  final String dateTaskStart;
   final String timeTask;
   final bool isDone;
   List<String> participants; // Champ pour stocker les participants
@@ -16,6 +17,7 @@ class TodoModel {
     required this.descriptionTask,
     required this.category,
     required this.dateTask,
+    required this.dateTaskStart,
     required this.timeTask,
     required this.isDone,
     required this.participants, // Ajout du champ des participants
@@ -27,6 +29,7 @@ class TodoModel {
       'descriptionTask': descriptionTask,
       'category': category,
       'dateTask': dateTask,
+      'dateTaskStart': dateTaskStart,
       'timeTask': timeTask,
       'isDone': isDone,
       'participants': participants, // Ajout du champ des participants
@@ -42,7 +45,8 @@ class TodoModel {
       dateTask: map['dateTask'] as String,
       timeTask: map['timeTask'] as String,
       isDone: map['isDone'] as bool,
-      participants: List<String>.from(map['participants']), // Ajout du champ des participants
+      participants: List<String>.from(map['participants']),
+      dateTaskStart: map['dateTaskStart'], // Ajout du champ des participants
     );
   }
 
@@ -53,9 +57,11 @@ class TodoModel {
       descriptionTask: doc['descriptionTask'],
       category: doc['category'],
       dateTask: doc['dateTask'],
+      dateTaskStart: doc['dateTaskStart'],
       timeTask: doc['timeTask'],
       isDone: doc['isDone'],
-      participants: List<String>.from(doc['participants']), // Ajout du champ des participants
+      participants: List<String>.from(
+          doc['participants']), // Ajout du champ des participants
     );
   }
 }

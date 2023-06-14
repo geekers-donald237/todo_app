@@ -23,11 +23,18 @@ class AddNewTaskModel extends ConsumerWidget {
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
 
+  String getCurrentDate() {
+    final now = DateTime.now();
+    final formatter = DateFormat.yMd();
+    return formatter.format(now);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dateProv = ref.watch(dateProvider);
     final data = ref.watch(fireBaseAuthProvider);
     final auth = ref.watch(authenticationProvider);
+    final dateStart = getCurrentDate();
     User? user = data.currentUser;
     String currentUserEmail = user!.email.toString();
     return Container(
@@ -124,7 +131,7 @@ class AddNewTaskModel extends ConsumerWidget {
                     final getValue = await showDatePicker(
                         context: context,
                         initialDate: DateTime.now(),
-                        firstDate: DateTime(2021),
+                        firstDate: DateTime.now(),
                         lastDate: DateTime(2025));
 
                     if (getValue != null) {
@@ -209,7 +216,6 @@ class AddNewTaskModel extends ConsumerWidget {
                             break;
                         }
 
-
                         ref.read(serviceProvider).addNewTask(TodoModel(
                               titleTask: 'General manner',
                               descriptionTask: 'one another task',
@@ -218,14 +224,12 @@ class AddNewTaskModel extends ConsumerWidget {
                               timeTask: ref.read(timeProvider),
                               isDone: false,
                               participants: [currentUserEmail],
+                              dateTaskStart: dateStart,
                             ));
 
                         titleController.clear();
                         descriptionController.clear();
                         ref.read(radioProvider.notifier).update((state) => 0);
-                        print(titleController.text +
-                            " lkjhjkjhjjj " +
-                            descriptionController.text);
                         Navigator.pop(context);
                       },
                       child: const Text('Create'),

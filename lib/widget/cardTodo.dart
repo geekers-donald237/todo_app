@@ -26,22 +26,54 @@ class cardTodoListWidget extends ConsumerWidget {
     // Calcul de la différence en jours
     final int differenceInDays = now.difference(date).inDays;
 
-    return -1 * differenceInDays;
+    return differenceInDays.abs();
   }
 
-  Color getColorByDayDifference(int dayDifference) {
-    if (dayDifference >= 0 && dayDifference <= 2) {
-      // Moins de 2 jours de différence
-      return const Color.fromARGB(255, 235, 21, 6); // Rouge
-    } else if (dayDifference <= 15) {
-      // Entre 2 et 15 jours de différence
-      return Color.fromARGB(207, 252, 80, 80); // Rouge orangé
-    } else if (dayDifference <= 40) {
-      // Entre 15 et 40 jours de différence
-      return Colors.yellow; // Jaune
+  int calculateTaskDuration(String startDateString, String endDateString) {
+    final DateFormat format = DateFormat('MM/dd/yyyy');
+
+    // Conversion des chaînes de caractères en objets DateTime
+    final DateTime startDate = format.parse(startDateString);
+    final DateTime endDate = format.parse(endDateString);
+
+    // Calcul de la différence en jours
+    final int durationInDays = endDate.difference(startDate).inDays;
+
+    return durationInDays.abs();
+  }
+
+  int calculateProgressPercentage(int taskDuration, int remainingDuration) {
+    // Vérification pour éviter une division par zéro
+    if (taskDuration <= 0) {
+      return 0;
+    }
+
+    // Calcul du pourcentage de progression
+    double progressPercentage =
+        ((taskDuration - remainingDuration) / taskDuration) * 100;
+
+    // Limite le pourcentage entre 0 et 100
+    progressPercentage = progressPercentage.clamp(0.0, 100.0);
+
+    // Arrondi à l'entier le plus proche
+    final roundedPercentage = progressPercentage.round();
+
+    return roundedPercentage;
+  }
+
+  Color getColorByProgress(int progress) {
+    if (progress >= 0 && progress <= 24) {
+      // Moins de 2% de progression
+      return Colors.green; // Rouge
+    } else if (progress <= 25) {
+      // Entre 2% et 15% de progression
+      return Colors.yellow; // Rouge orangé
+    } else if (progress <= 60) {
+      // Entre 15% et 40% de progression
+      return Color.fromARGB(207, 252, 80, 80); // Jaune
     } else {
-      // Plus de 40 jours de différence
-      return Colors.green; // Vert
+      // Plus de 40% de progression
+      return const Color.fromARGB(255, 235, 21, 6); // Vert
     }
   }
 
@@ -50,6 +82,9 @@ class cardTodoListWidget extends ConsumerWidget {
     Color categoryColor = Colors.white;
     final todoData = ref.watch(fetchStreamProvider);
     String date = '';
+    String dateStart = '';
+    int valueIndicator;
+    Color indicatorColor;
 
     return todoData.when(
       data: (todoData) {
@@ -71,8 +106,14 @@ class cardTodoListWidget extends ConsumerWidget {
         }
 
         date = todoData[getIndex].dateTask.toString();
+        dateStart = todoData[getIndex].dateTaskStart.toString();
         int difference = calculateDayDifference(date);
-        print('Différence en heures : $difference');
+        print('Différence en jours entre ajourdhui et la fin : $difference');
+        int taskDuration = calculateTaskDuration(dateStart, date);
+        print('taskk Duration $taskDuration');
+        valueIndicator = calculateProgressPercentage(taskDuration, difference);
+        print(valueIndicator);
+        indicatorColor = getColorByProgress(valueIndicator);
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 4),
@@ -193,12 +234,11 @@ class cardTodoListWidget extends ConsumerWidget {
                                       padding:
                                           EdgeInsets.symmetric(horizontal: 10),
                                       child: LinearProgressIndicator(
-                                        value: 8,
+                                        value: valueIndicator / 100,
                                         backgroundColor: Colors.grey.shade300,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                getColorByDayDifference(
-                                                    (difference))),
+                                                indicatorColor),
                                       ),
                                     ),
                                   ),
