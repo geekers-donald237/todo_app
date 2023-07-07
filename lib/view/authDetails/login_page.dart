@@ -116,12 +116,9 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         Container(
                           margin: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 16),
+                              horizontal: 24, vertical: 8),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(25)),
                           child: TextFormField(
                             controller: _email,
                             autocorrect: true,
@@ -132,7 +129,8 @@ class _LoginPageState extends State<LoginPage> {
                               hintText: 'Email address',
                               hintStyle: const TextStyle(color: Colors.black54),
                               icon: Icon(Icons.email_outlined,
-                                  color: Colors.blue.shade700, size: 24),
+                                  color: Color.fromARGB(255, 238, 59, 110),
+                                  size: 24),
                               alignLabelWithHint: true,
                               // border: InputBorder.none,
                             ),
@@ -149,9 +147,6 @@ class _LoginPageState extends State<LoginPage> {
                               horizontal: 24, vertical: 8),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(25)),
                           child: TextFormField(
                             controller: _password,
                             obscureText: true,
@@ -165,7 +160,8 @@ class _LoginPageState extends State<LoginPage> {
                               hintText: 'Password',
                               hintStyle: const TextStyle(color: Colors.black54),
                               icon: Icon(CupertinoIcons.lock_circle,
-                                  color: Colors.blue.shade700, size: 24),
+                                  color: Color.fromARGB(255, 238, 59, 110),
+                                  size: 24),
                               alignLabelWithHint: true,
                             ),
                           ),
@@ -177,9 +173,6 @@ class _LoginPageState extends State<LoginPage> {
                                 horizontal: 24, vertical: 8),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 4),
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(25)),
                             child: TextFormField(
                               obscureText: true,
                               decoration: InputDecoration(
@@ -187,7 +180,8 @@ class _LoginPageState extends State<LoginPage> {
                                 hintStyle:
                                     const TextStyle(color: Colors.black54),
                                 icon: Icon(CupertinoIcons.lock_circle,
-                                    color: Colors.blue.shade700, size: 24),
+                                    color: Color.fromARGB(255, 238, 59, 110),
+                                    size: 24),
                                 alignLabelWithHint: true,
                               ),
                               validator: type == Status.signUp
@@ -209,20 +203,21 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.only(top: 32.0),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.only(top: 20.0),
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
                         width: double.infinity,
                         child: _isLoading
                             ? const Center(child: CircularProgressIndicator())
                             : MaterialButton(
                                 onPressed: _onPressedFunction,
-                                textColor: Colors.blue.shade700,
+                                textColor: Color.fromARGB(255, 238, 59, 110),
                                 textTheme: ButtonTextTheme.primary,
                                 minWidth: 100,
                                 padding: const EdgeInsets.all(18),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
-                                  side: BorderSide(color: Colors.blue.shade700),
+                                  side: BorderSide(
+                                      color: Color.fromARGB(255, 238, 59, 110)),
                                 ),
                                 child: Text(
                                   type == Status.login ? 'Log in' : 'Sign up',
@@ -239,13 +234,14 @@ class _LoginPageState extends State<LoginPage> {
                             ? const Center(child: CircularProgressIndicator())
                             : MaterialButton(
                                 onPressed: _loginWithGoogle,
-                                textColor: Colors.blue.shade700,
+                                textColor: Color.fromARGB(255, 238, 59, 110),
                                 textTheme: ButtonTextTheme.primary,
                                 minWidth: 100,
                                 padding: const EdgeInsets.all(18),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
-                                  side: BorderSide(color: Colors.blue.shade700),
+                                  side: BorderSide(
+                                      color: Color.fromARGB(255, 238, 59, 110)),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -260,7 +256,9 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                               ),
                       ),
-                      const Spacer(),
+                      SizedBox(
+                        height: 15,
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 24.0),
                         child: RichText(
@@ -274,7 +272,8 @@ class _LoginPageState extends State<LoginPage> {
                                   text: type == Status.login
                                       ? 'Sign up now'
                                       : 'Log in',
-                                  style: TextStyle(color: Colors.blue.shade700),
+                                  style: TextStyle(
+                                      color: Color.fromARGB(255, 238, 59, 110)),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       _switchType();

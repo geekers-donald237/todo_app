@@ -4,13 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:gap/gap.dart';
 import 'package:todoapp/provider/services_provider.dart';
 import 'package:todoapp/view/category.dart';
 import 'package:todoapp/view/home.dart';
+import 'package:todoapp/widget/cardTodoProfil.dart';
 
 import '../../provider/auth_provider.dart';
-import '../../widget/cardTodo.dart';
+import '../../provider/selected_Index_provider.dart';
 
 class Profile extends ConsumerWidget {
   bool showControls = false;
@@ -18,7 +18,7 @@ class Profile extends ConsumerWidget {
   String email = '';
   File? imageFile;
   bool isEditing = false;
-  bool _loading = false;
+  int selectedIndex = 0;
 
   String extractNameFromEmail(String email) {
     if (email.isEmpty) {
@@ -39,18 +39,21 @@ class Profile extends ConsumerWidget {
     String photoUrl = '', nom = '';
     String providerId = user?.providerData[0].providerId ?? '';
     print(providerId);
+    selectedIndex = ref.watch(selectedIndexProvider);
+    int completedTasksCount = 0;
+    int incompleteTasksCount = 0;
+
     final todoData = ref.watch(fetchStreamProvider); // erreur ici
     if (providerId == 'google.com') {
       photoUrl = user!.photoURL.toString();
       nom = user.displayName.toString();
     } else {
-      photoUrl =
-          "https://www.google.com/url?sa=i&url=https%3A%2F%2Fgithub.com%2FJerry8538&psig=AOvVaw0DkyHx1yLcIZ0rY-zUmnla&ust=1686227516406000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCLDou6eHsf8CFQAAAAAdAAAAABAE";
       nom = extractNameFromEmail(user!.email.toString());
     }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text("Mon profil"),
+        title: const Text("Mon profil"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -61,13 +64,38 @@ class Profile extends ConsumerWidget {
           },
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            color: Colors.blue.shade300,
-            onPressed: () async {
-              auth.signOut();
+          PopupMenuButton<int>(
+            icon: const Icon(
+              Icons.more_vert,
+              color: Colors.black,
+            ),
+            onSelected: (value) {
+              if (value == 0) {
+              } else if (value == 1) {
+              } else {
+                auth.signOut();
+              }
             },
-          ),
+            itemBuilder: (BuildContext context) {
+              return <PopupMenuEntry<int>>[
+                const PopupMenuItem<int>(
+                  value: 0,
+                  child:
+                      Text("My Account", style: TextStyle(color: Colors.white)),
+                ),
+                const PopupMenuItem<int>(
+                  value: 1,
+                  child:
+                      Text("Settings", style: TextStyle(color: Colors.white)),
+                ),
+                const PopupMenuItem<int>(
+                  value: 2,
+                  child: Text("Logout", style: TextStyle(color: Colors.white)),
+                ),
+              ];
+            },
+            color: Colors.black,
+          )
         ],
       ),
       body: Container(
@@ -102,10 +130,12 @@ class Profile extends ConsumerWidget {
                             shape: BoxShape.circle,
                           ),
                           child: ClipOval(
-                            child: Image.network(
-                              photoUrl,
-                              fit: BoxFit.cover,
-                            ),
+                            child: providerId != 'google.com'
+                                ? const Image(image: AssetImage('assets/avatar.png'))
+                                : Image.network(
+                                    photoUrl,
+                                    fit: BoxFit.cover,
+                                  ),
                           ),
                         ),
                       ),
@@ -125,40 +155,62 @@ class Profile extends ConsumerWidget {
                         ],
                       ),
                       const Divider(
-                        color: Colors.black,
-                        height: 40,
+                        color: Colors.black54,
+                        height: 25,
                         thickness: 2,
                         indent: 20,
                         endIndent: 20,
                       ),
-                      Gap(10),
-                      ListView.builder(
-                        itemCount: todoData.value?.length ?? 0,
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          // Récupérer la tâche (todo) à l'index donné
-                          final todo = todoData.value?[index];
+                      Container(
+                        height: 45,
+                        margin: const EdgeInsets.only(bottom: 16.0),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.black12,
+                              width: 1.0, // Épaisseur de la bordure
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            buildMenuItem(Icons.pending_actions_outlined,
+                                selectedIndex == 0, ref, completedTasksCount),
+                            buildMenuItem(Icons.event_available_rounded,
+                                selectedIndex == 1, ref, incompleteTasksCount),
+                          ],
+                        ),
+                      ),
+                      SingleChildScrollView(
+                        child: ListView.builder(
+                          itemCount: todoData.value?.length ?? 0,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            final todo = todoData.value?[index];
+                            final currentUserEmail = user.email;
+                            final isCurrentUserParticipant =
+                                todo?.participants.contains(currentUserEmail) ??
+                                    false;
+                            final isDone = todo?.isDone ?? false;
 
-                          // Vérifier si l'utilisateur actuel est un participant de la tâche
-                          final currentUserEmail = user
-                              .email; // Remplacez par l'e-mail de l'utilisateur actuel
-                          final isCurrentUserParticipant =
-                              todo?.participants.contains(currentUserEmail) ??
-                                  false;
+                            if (selectedIndex == 0 &&
+                                isCurrentUserParticipant &&
+                                !isDone) {
+                              incompleteTasksCount++; // Incrémente le nombre de tâches non terminées
 
-                          // Vérifier si la tâche est marquée comme terminée
-                          final isDone = todo?.isDone ?? false;
-
-                          // Afficher uniquement les todos de l'utilisateur actuel où isDone est à true
-                          if (isCurrentUserParticipant && isDone) {
-                            return cardTodoListWidget(
-                              getIndex: index,
-                            );
-                          } else {
-                            // Retourner un widget vide si l'utilisateur actuel n'est pas un participant de la tâche ou si isDone est à false
-                            return SizedBox.shrink();
-                          }
-                        },
+                              return CardTodoProfile(getIndex: index);
+                            } else if (selectedIndex == 1 &&
+                                isCurrentUserParticipant &&
+                                isDone) {
+                              completedTasksCount; //Incremente e nombres de taches non terminees
+                              return CardTodoProfile(getIndex: index);
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        ),
                       )
                     ],
                   ),
@@ -172,10 +224,10 @@ class Profile extends ConsumerWidget {
         items: [
           BottomNavigationBarItem(
             icon: IconButton(
-              icon: Icon(Icons.home),
+              icon: const Icon(Icons.home),
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => MyHomePage(),
+                  builder: (context) => const MyHomePage(),
                 ));
               },
             ),
@@ -183,18 +235,18 @@ class Profile extends ConsumerWidget {
           ),
           BottomNavigationBarItem(
             icon: IconButton(
-              icon: Icon(Icons.category),
+              icon: const Icon(Icons.category),
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => CategoriesPage(),
                 ));
               },
             ),
-            label: 'categori',
+            label: 'categorie',
           ),
           BottomNavigationBarItem(
             icon: IconButton(
-              icon: Icon(Icons.person),
+              icon: const Icon(Icons.person),
               onPressed: () {
                 // Navigator.of(context).push(MaterialPageRoute(
                 //   builder: (context) =>,
@@ -228,6 +280,62 @@ class Profile extends ConsumerWidget {
     } else {
       print('User not logged in.');
     }
+  }
+
+  Widget buildMenuItem(
+      IconData iconData, bool isSelected, WidgetRef ref, int badgeCount) {
+    return GestureDetector(
+      onTap: () {
+        selectedIndex = [
+          Icons.pending_actions_outlined,
+          Icons.event_available_rounded,
+        ].indexOf(iconData);
+
+        ref
+            .read(selectedIndexProvider.notifier)
+            .update((state) => selectedIndex);
+        print(selectedIndex);
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                iconData,
+                color: isSelected ? Colors.black87 : Colors.black26,
+              ),
+              // Positioned(
+              //   top: -5,
+              //   right: -5,
+              //   child: Container(
+              //     padding: EdgeInsets.all(4),
+              //     decoration: BoxDecoration(
+              //       color: Colors.red,
+              //       shape: BoxShape.circle,
+              //     ),
+              //     child: Text(
+              //       badgeCount.toString(),
+              //       style: TextStyle(
+              //         color: Colors.white,
+              //         fontSize: 12,
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Container(
+            color: isSelected ? Colors.black : Colors.transparent,
+            height: 2,
+            width: 55,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildTextField(String label, String placeholder) {

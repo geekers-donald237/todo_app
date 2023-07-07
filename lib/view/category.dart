@@ -20,48 +20,7 @@ class CategoriesPage extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: categoriesCollection.snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final categories = snapshot.data!.docs;
-
-            return ListView.builder(
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(category['name']),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.delete),
-                          color: Colors.red.shade100,
-                          onPressed: () {
-                            // Supprimer la catégorie
-                            deleteCategory(category.id);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.edit),
-                          color: Colors.blueAccent.shade100,
-                          onPressed: () {
-                            // Modifier la catégorie
-                            editCategory(context, category);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          } else if (snapshot.hasError) {
-            return Text('Error: ${snapshot.error}');
-          } else {
-            return CircularProgressIndicator();
-          }
+          return buildCategoryList(context, snapshot);
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -118,6 +77,52 @@ class CategoriesPage extends StatelessWidget {
         onTap: (index) {},
       ),
     );
+  }
+
+  Widget buildCategoryList(
+      BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+    if (snapshot.hasData) {
+      final categories = snapshot.data!.docs;
+
+      return ListView.builder(
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+
+          return Card(
+            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: ListTile(
+              title: Text(category['name']),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    color: Colors.red.shade100,
+                    onPressed: () {
+                      // Supprimer la catégorie
+                      deleteCategory(category.id);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    color: Colors.blueAccent.shade100,
+                    onPressed: () {
+                      // Modifier la catégorie
+                      editCategory(context, category);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } else if (snapshot.hasError) {
+      return Text('Error: ${snapshot.error}');
+    } else {
+      return CircularProgressIndicator();
+    }
   }
 
   void openAddCategoryDialog(BuildContext context) {
